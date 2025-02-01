@@ -1,6 +1,6 @@
 const corsConfig = {
     origin: ['https://xen-guard-frontend.vercel.app', 'http://localhost:3000'],
-    credentials: true,
+    credentials: false,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
     exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],

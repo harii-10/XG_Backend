@@ -68,7 +68,12 @@ export const signup = async (req, res) => {
             }
         });
     } catch (err) {
-        console.error("Signup error:", err);
+        console.error("Error details:", {
+            message: err.message,
+            stack: err.stack,
+            code: err.code,
+            name: err.name
+        });
         res.status(500).json({
             success: false,
             error: "Server Error",
@@ -135,7 +140,12 @@ export const login = async (req, res) => {
             }
         });
     } catch (err) {
-        console.error("Login error:", err);
+        console.error("Error details:", {
+            message: err.message,
+            stack: err.stack,
+            code: err.code,
+            name: err.name
+        });
         res.status(500).json({
             success: false,
             error: "Server Error",
