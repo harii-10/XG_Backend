@@ -16,6 +16,8 @@ import ThreatMonitoringService from './services/threatMonitoringService.js';
 import fs from 'fs';
 import threatScanRoutes from './routes/threatScanRoutes.js';
 import alertRoutes from './routes/alertRoutes.js';
+import { corsMiddleware } from './middleware/cors.js';
+import corsConfig from './config/corsConfig.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -43,8 +45,10 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-        methods: ['GET', 'POST']
+        origin: 'https://xen-guard-frontend.vercel.app',
+        methods: ['GET', 'POST'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true
     }
 });
 
@@ -60,19 +64,25 @@ if (!fs.existsSync(uploadDir)) {
 // Middleware
 app.use(express.json());
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: ['https://xen-guard-frontend.vercel.app', 'http://localhost:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept']
 }));
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Add preflight handler for all routes
+app.options('*', cors());
 
 // Log all incoming requests
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
     next();
 });
+
+// Add this before your routes
+app.use(corsMiddleware);
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -213,3 +223,17 @@ async function startServer(port) {
 
 // Start server with initial port
 startServer(config.port);
+
+// Update the CORS configuration
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'https://xen-guard-frontend.vercel.app');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    if (req.method === 'OPTIONS') {
+        res.header('Access-Control-Max-Age', '86400');
+        return res.status(200).end();
+    }
+    next();
+});
